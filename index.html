@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Singapore CPF Retirement Planner</title>
+<style>
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;background:#F4F7FB;color:#0A2540;}
+header{background:linear-gradient(135deg,#0A2540,#1A4A80);color:white;padding:50px 20px;text-align:center;}
+header h1{margin:0;font-size:28px;}
+header p{margin-top:10px;font-size:15px;opacity:0.85;}
+.container{padding:20px;max-width:700px;margin:-40px auto 40px auto;}
+.card{background:white;padding:20px;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,0.05);margin-bottom:20px;}
+h2{font-size:18px;margin-top:0;}
+label{font-size:13px;font-weight:600;display:block;}
+/* INPUT SIZE FIX */
+input[type="number"],
+input[type="range"] {
+  width: 100%;
+  max-width: 280px; /* prevent inputs from being too long */
+  margin-top:6px;
+  margin-bottom:15px;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:16px;
+  box-sizing:border-box;
+}
+button{width:100%;padding:16px;border-radius:14px;border:none;background:#0076CC;color:white;font-weight:bold;font-size:16px;cursor:pointer;}
+button:active{transform:scale(0.98);}
+.results{background:#EDF6FF;padding:15px;border-radius:12px;margin-top:15px;font-size:14px;}
+.total{font-size:18px;font-weight:bold;margin-top:10px;}
+footer{text-align:center;font-size:12px;padding:30px 20px;color:#777;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Singapore CPF Retirement Planner</h1>
+  <p>Plan your CPF savings and retirement future with simple inputs</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+  <h2>About CPF Singapore</h2>
+  <p>
+    The <strong>Central Provident Fund (CPF)</strong> is Singapore’s national retirement savings scheme. As you work, you and your employer contribute to CPF accounts — Ordinary, Special, and MediSave — which help with housing, healthcare and retirement.
+  </p>
+  <p>
+    At age 55, a <strong>Retirement Account (RA)</strong> is created from your Special and Ordinary Account savings to meet retirement income needs. You can set aside savings to meet the Basic Retirement Sum (BRS), the Full Retirement Sum (FRS), or the Enhanced Retirement Sum (ERS) for higher monthly payouts in retirement. The current ERS is $440,800 in 2026 and is projected to rise to $456,400 in 2027, as CPF retirement sums are updated yearly. :contentReference[oaicite:0]{index=0}
+  </p>
+  <p>
+    The ERS is the maximum amount you can voluntarily top up your RA to for higher payouts, and it increases every January. :contentReference[oaicite:1]{index=1}
+  </p>
+</div>
+
+<div class="card">
+<h2>CPF RA Growth Projection to Age 55</h2>
+
+<label>Current Age</label><input type="number" id="cpfAge">
+<label>Existing CPF RA (SGD)</label><input type="number" id="cpfExisting">
+<label>Monthly Salary (SGD)</label><input type="number" id="cpfSalary">
+<label>Employee Contribution %</label><input type="number" id="cpfEmpRate" value="20">
+<label>Employer Contribution %</label><input type="number" id="cpfEmployerRate" value="17">
+<label>Expected Annual Return (%)</label><input type="number" id="cpfReturnRate" value="4">
+
+<button onclick="calculateCPFProjection()">Calculate Growth</button>
+
+<div id="cpfResults" class="results" style="display:none;">
+<div id="cpfBalDetail"></div>
+<div class="total" id="cpfFinalResult"></div>
+</div>
+</div>
+
+<div class="card">
+  <h2>CPF RA Growth Projection after 55</h2>
+
+  <!-- Part 1: Forecast ERS at age 55 -->
+  <label>Current Age</label>
+  <input type="number" id="currAgeForERS">
+
+  <label>Current ERS Amount (SGD)</label>
+  <input type="number" id="currentERS" value="440800">
+
+  <label>Expected Yearly ERS Increase (%)</label>
+  <input type="number" id="ersGrowthRate" value="3.5">
+
+  <button onclick="forecastERS()">Forecast ERS at 55</button>
+
+  <div id="ersForecastResults" class="results" style="display:none;">
+    <div id="ersAt55" class="total"></div>
+  </div>
+
+  <hr>
+
+  <!-- Part 2: RA Growth After 55 -->
+  <label>RA Amount at 55 (SGD)</label>
+  <input type="number" id="initRA55">
+
+  <label>Yearly TopUp (% of ERS forecast) <span id="topupDisplay">3.5%</span></label>
+  <input type="range" id="topupPercent" min="0" max="3.5" step="0.1" value="3.5"
+       oninput="document.getElementById('topupDisplay').innerText = this.value + '%'">
+
+  <label>Expected Annual Return (%)</label>
+  <input type="number" id="post55Return" value="4">
+
+  <button onclick="calculateRAGrowth55()">Project RA Growth</button>
+
+  <div id="raGrowthResults2" class="results" style="display:none;">
+    <div id="ra65" class="total"></div>
+    <div id="ra70" class="total"></div>
+    <div id="ersInfo" class="total"></div>
+  </div>
+</div>
+
+</div>
+
+<footer>
+This planner provides estimates only and is not an official CPF Board tool.
+</footer>
+
+<script>
+function calculateCPFProjection() {
+  let age = parseFloat(document.getElementById("cpfAge").value);
+  let existing = parseFloat(document.getElementById("cpfExisting").value);
+  let salary = parseFloat(document.getElementById("cpfSalary").value);
+  let empRate = parseFloat(document.getElementById("cpfEmpRate").value)/100;
+  let employerRate = parseFloat(document.getElementById("cpfEmployerRate").value)/100;
+  let returnRate = parseFloat(document.getElementById("cpfReturnRate").value)/100;
+
+  if (isNaN(age) || age >= 55 || age < 0) {
+    alert("Enter a valid current age below 55");
+    return;
+  }
+
+  let years = 55 - age;
+  let balance = existing;
+  let detail="";
+
+  for (let i=0; i<years; i++){
+    let yearlyContrib = salary*(empRate+employerRate)*12;
+    let interest = balance * returnRate;
+    balance += yearlyContrib + interest;
+    detail += "Year "+(i+1)+" Growth: SGD "+interest.toFixed(2)+"<br>";
+  }
+
+  document.getElementById("cpfResults").style.display="block";
+  document.getElementById("cpfBalDetail").innerHTML = detail;
+  document.getElementById("cpfFinalResult").innerText =
+    "Estimated CPF RA Balance at 55: SGD "+balance.toFixed(2);
+}
+
+function forecastERS() {
+  let currAge = parseFloat(document.getElementById("currAgeForERS").value);
+  let currentERS = parseFloat(document.getElementById("currentERS").value);
+  let growth = parseFloat(document.getElementById("ersGrowthRate").value) / 100;
+
+  if (isNaN(currAge) || currAge >= 55 || currAge < 0) {
+    alert("Enter a valid current age below 55");
+    return;
+  }
+
+  let yearsTo55 = 55 - currAge;
+  let ersFuture = currentERS;
+  for (let i = 0; i < yearsTo55; i++) {
+    ersFuture *= (1 + growth);
+  }
+
+  document.getElementById("ersForecastResults").style.display = "block";
+  document.getElementById("ersAt55").innerText =
+    "Estimated ERS at age 55: SGD " + ersFuture.toFixed(2);
+}
+
+function calculateRAGrowth55() {
+  let initRA55 = parseFloat(document.getElementById("initRA55").value);
+  let topupPerc = parseFloat(document.getElementById("topupPercent").value) / 100;
+  let postRate = parseFloat(document.getElementById("post55Return").value) / 100;
+
+  if (isNaN(initRA55) || isNaN(topupPerc) || isNaN(postRate)) {
+    alert("Please enter valid values");
+    return;
+  }
+
+  let raAt65 = initRA55;
+  for (let i=0; i<10; i++){
+    raAt65 += initRA55 * topupPerc;
+    raAt65 *= (1 + postRate);
+  }
+
+  let raAt70 = raAt65;
+  for (let j=0; j<5; j++){
+    raAt70 += initRA55 * topupPerc;
+    raAt70 *= (1 + postRate);
+  }
+
+  document.getElementById("raGrowthResults2").style.display = "block";
+  document.getElementById("ra65").innerText =
+    "Projected RA Amount at age 65: SGD " + raAt65.toFixed(2);
+  document.getElementById("ra70").innerText =
+    "Projected RA Amount at age 70: SGD " + raAt70.toFixed(2);
+  document.getElementById("ersInfo").innerText =
+    "Reference ERS forecast: "+document.getElementById("ersAt55").innerText;
+}
+</script>
+
+</body>
+</html>
