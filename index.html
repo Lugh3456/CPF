@@ -17,7 +17,7 @@ label{font-size:13px;font-weight:600;display:block;}
 input[type="number"],
 input[type="range"] {
   width: 100%;
-  max-width: 280px; /* prevent inputs from being too long */
+  max-width: 300px; /* prevent inputs from being too long */
   margin-top:6px;
   margin-bottom:15px;
   padding:10px;
@@ -51,27 +51,11 @@ footer{text-align:center;font-size:12px;padding:30px 20px;color:#777;}
     At age 55, a <strong>Retirement Account (RA)</strong> is created from your Special and Ordinary Account savings to meet retirement income needs. You can set aside savings to meet the Basic Retirement Sum (BRS), the Full Retirement Sum (FRS), or the Enhanced Retirement Sum (ERS) for higher monthly payouts in retirement. The current ERS is $440,800 in 2026 and is projected to rise to $456,400 in 2027, as CPF retirement sums are updated yearly. :contentReference[oaicite:0]{index=0}
   </p>
   <p>
-    The ERS is the maximum amount you can voluntarily top up your RA to for higher payouts, and it increases every January. :contentReference[oaicite:1]{index=1}
+    The ERS is the maximum amount you can voluntarily top up your RA to for higher payouts, and it increases every January.
   </p>
 </div>
 
-<div class="card">
-<h2>CPF RA Growth Projection to Age 55</h2>
 
-<label>Current Age</label><input type="number" id="cpfAge">
-<label>Existing CPF RA (SGD)</label><input type="number" id="cpfExisting">
-<label>Monthly Salary (SGD)</label><input type="number" id="cpfSalary">
-<label>Employee Contribution %</label><input type="number" id="cpfEmpRate" value="20">
-<label>Employer Contribution %</label><input type="number" id="cpfEmployerRate" value="17">
-<label>Expected Annual Return (%)</label><input type="number" id="cpfReturnRate" value="4">
-
-<button onclick="calculateCPFProjection()">Calculate Growth</button>
-
-<div id="cpfResults" class="results" style="display:none;">
-<div id="cpfBalDetail"></div>
-<div class="total" id="cpfFinalResult"></div>
-</div>
-</div>
 
 <div class="card">
   <h2>CPF RA Growth Projection after 55</h2>
