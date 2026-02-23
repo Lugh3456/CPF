@@ -13,21 +13,12 @@ header p{margin-top:10px;font-size:15px;opacity:0.85;}
 .card{background:white;padding:20px;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,0.05);margin-bottom:20px;}
 h2{font-size:18px;margin-top:0;}
 label{font-size:13px;font-weight:600;display:block;}
-/* INPUT SIZE FIX */
-input[type="number"],
-input[type="range"] {
-  width: 100%;
-  max-width: 300px; /* prevent inputs from being too long */
-  margin-top:6px;
-  margin-bottom:15px;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #ddd;
-  font-size:16px;
-  box-sizing:border-box;
+input[type="number"], input[type="range"] {
+  width:100%;max-width:300px;margin-top:6px;margin-bottom:15px;
+  padding:10px;border-radius:10px;border:1px solid #ddd;font-size:16px;box-sizing:border-box;
 }
 button{width:100%;padding:16px;border-radius:14px;border:none;background:#0076CC;color:white;font-weight:bold;font-size:16px;cursor:pointer;}
-button:active{transform:scale(0.98);}
+button:disabled{background:#aaccee;cursor:not-allowed;}
 .results{background:#EDF6FF;padding:15px;border-radius:12px;margin-top:15px;font-size:14px;}
 .total{font-size:18px;font-weight:bold;margin-top:10px;}
 footer{text-align:center;font-size:12px;padding:30px 20px;color:#777;}
@@ -45,22 +36,16 @@ footer{text-align:center;font-size:12px;padding:30px 20px;color:#777;}
 <div class="card">
   <h2>About CPF Singapore</h2>
   <p>
-    The <strong>Central Provident Fund (CPF)</strong> is Singapore’s national retirement savings scheme. As you work, you and your employer contribute to CPF accounts — Ordinary, Special, and MediSave — which help with housing, healthcare and retirement.
-  </p>
-  <p>
-    At age 55, a <strong>Retirement Account (RA)</strong> is created from your Special and Ordinary Account savings to meet retirement income needs. You can set aside savings to meet the Basic Retirement Sum (BRS), the Full Retirement Sum (FRS), or the Enhanced Retirement Sum (ERS) for higher monthly payouts in retirement. The current ERS is $440,800 in 2026 and is projected to rise to $456,400 in 2027, as CPF retirement sums are updated yearly.
-  </p>
-  <p>
-    The ERS is the maximum amount you can voluntarily top up your RA to for higher payouts, and it increases every January.
+    The <strong>Central Provident Fund (CPF)</strong> is Singapore’s national retirement savings scheme.
+    At age 55, a <strong>Retirement Account (RA)</strong> is created from your Special and Ordinary Account savings to meet retirement income needs.
+    You can set aside savings to meet the Basic Retirement Sum (BRS), Full Retirement Sum (FRS), or <strong>Enhanced Retirement Sum (ERS)</strong> for higher monthly payouts in retirement.
+    The ERS increases every year and is the cap you can top up your RA to once you are aged 55 or above.
   </p>
 </div>
-
-
 
 <div class="card">
   <h2>CPF RA Growth Projection after 55</h2>
 
-  <!-- Part 1: Forecast ERS at age 55 -->
   <label>Current Age</label>
   <input type="number" id="currAgeForERS">
 
@@ -70,15 +55,14 @@ footer{text-align:center;font-size:12px;padding:30px 20px;color:#777;}
   <label>Expected Yearly ERS Increase (%)</label>
   <input type="number" id="ersGrowthRate" value="3.5">
 
-  <button onclick="forecastERS()">Forecast ERS at 55</button>
+  <button id="btnForecastERS" onclick="forecastERS()">Forecast ERS at 55</button>
 
   <div id="ersForecastResults" class="results" style="display:none;">
-    <div id="ersAt55" class="total"></div>
+    <div id="ersAt55" class="total" data-value=""></div>
   </div>
 
   <hr>
 
-  <!-- Part 2: RA Growth After 55 -->
   <label>RA Amount at 55 (SGD)</label>
   <input type="number" id="initRA55">
 
@@ -89,14 +73,19 @@ footer{text-align:center;font-size:12px;padding:30px 20px;color:#777;}
   <label>Expected Annual Return (%)</label>
   <input type="number" id="post55Return" value="4">
 
-  <button onclick="calculateRAGrowth55()">Project RA Growth</button>
+  <button id="btnProject" onclick="calculateRAGrowth55()" disabled>Project RA Growth</button>
 
   <div id="raGrowthResults2" class="results" style="display:none;">
     <div id="ra65" class="total"></div>
     <div id="ra70" class="total"></div>
-    <div id="ersInfo" class="total"></div>
   </div>
 </div>
+
+<hr>
+<h3>Part 3: Yearly RA Growth Table (55–70)</h3>
+<button id="btnTable" onclick="generateRATable()" disabled>Generate Yearly Table</button>
+
+<div id="raGrowthTable" class="results" style="display:none; overflow-x:auto;"></div>
 
 </div>
 
@@ -105,36 +94,6 @@ This planner provides estimates only and is not an official CPF Board tool.
 </footer>
 
 <script>
-function calculateCPFProjection() {
-  let age = parseFloat(document.getElementById("cpfAge").value);
-  let existing = parseFloat(document.getElementById("cpfExisting").value);
-  let salary = parseFloat(document.getElementById("cpfSalary").value);
-  let empRate = parseFloat(document.getElementById("cpfEmpRate").value)/100;
-  let employerRate = parseFloat(document.getElementById("cpfEmployerRate").value)/100;
-  let returnRate = parseFloat(document.getElementById("cpfReturnRate").value)/100;
-
-  if (isNaN(age) || age >= 55 || age < 0) {
-    alert("Enter a valid current age below 55");
-    return;
-  }
-
-  let years = 55 - age;
-  let balance = existing;
-  let detail="";
-
-  for (let i=0; i<years; i++){
-    let yearlyContrib = salary*(empRate+employerRate)*12;
-    let interest = balance * returnRate;
-    balance += yearlyContrib + interest;
-    detail += "Year "+(i+1)+" Growth: SGD "+interest.toFixed(2)+"<br>";
-  }
-
-  document.getElementById("cpfResults").style.display="block";
-  document.getElementById("cpfBalDetail").innerHTML = detail;
-  document.getElementById("cpfFinalResult").innerText =
-    "Estimated CPF RA Balance at 55: SGD "+balance.toFixed(2);
-}
-
 function forecastERS() {
   let currAge = parseFloat(document.getElementById("currAgeForERS").value);
   let currentERS = parseFloat(document.getElementById("currentERS").value);
@@ -144,7 +103,6 @@ function forecastERS() {
     alert("Enter a valid current age below 55");
     return;
   }
-
   let yearsTo55 = 55 - currAge;
   let ersFuture = currentERS;
   for (let i = 0; i < yearsTo55; i++) {
@@ -152,8 +110,13 @@ function forecastERS() {
   }
 
   document.getElementById("ersForecastResults").style.display = "block";
-  document.getElementById("ersAt55").innerText =
-    "Estimated ERS at age 55: SGD " + ersFuture.toFixed(2);
+  const ersElem = document.getElementById("ersAt55");
+  ersElem.innerText = "Estimated ERS at age 55: SGD " + ersFuture.toFixed(2);
+  ersElem.dataset.value = ersFuture.toFixed(2);
+
+  // Enable the other buttons once ERS is forecast
+  document.getElementById("btnProject").disabled = false;
+  document.getElementById("btnTable").disabled = false;
 }
 
 function calculateRAGrowth55() {
@@ -161,30 +124,83 @@ function calculateRAGrowth55() {
   let topupPerc = parseFloat(document.getElementById("topupPercent").value) / 100;
   let postRate = parseFloat(document.getElementById("post55Return").value) / 100;
 
-  if (isNaN(initRA55) || isNaN(topupPerc) || isNaN(postRate)) {
-    alert("Please enter valid values");
+  let ers55 = parseFloat(document.getElementById("ersAt55").dataset.value);
+  let ersGrowth = parseFloat(document.getElementById("ersGrowthRate").value) / 100;
+
+  if (isNaN(initRA55)||isNaN(topupPerc)||isNaN(postRate)||isNaN(ers55)||isNaN(ersGrowth)) {
+    alert("Enter all valid values");
     return;
   }
 
-  let raAt65 = initRA55;
+  let balance = initRA55, totalTopups65=0, totalInterest65=0;
   for (let i=0; i<10; i++){
-    raAt65 += initRA55 * topupPerc;
-    raAt65 *= (1 + postRate);
+    let ersThisYear = ers55 * Math.pow(1+ersGrowth,i);
+    let topup = ersThisYear*topupPerc; totalTopups65+=topup;
+    balance += topup;
+    let interest = balance*postRate; totalInterest65+=interest; balance += interest;
   }
+  let final65 = balance;
 
-  let raAt70 = raAt65;
-  for (let j=0; j<5; j++){
-    raAt70 += initRA55 * topupPerc;
-    raAt70 *= (1 + postRate);
+  let totalTopups70=totalTopups65, totalInterest70=totalInterest65;
+  for (let j=10; j<15; j++){
+    let ersThisYear = ers55 * Math.pow(1+ersGrowth,j);
+    let topup = ersThisYear*topupPerc; totalTopups70+=topup;
+    balance += topup;
+    let interest = balance*postRate; totalInterest70+=interest; balance += interest;
   }
+  let final70 = balance;
 
-  document.getElementById("raGrowthResults2").style.display = "block";
-  document.getElementById("ra65").innerText =
-    "Projected RA Amount at age 65: SGD " + raAt65.toFixed(2);
-  document.getElementById("ra70").innerText =
-    "Projected RA Amount at age 70: SGD " + raAt70.toFixed(2);
-  document.getElementById("ersInfo").innerText =
-    "Reference ERS forecast: "+document.getElementById("ersAt55").innerText;
+  document.getElementById("raGrowthResults2").style.display="block";
+  document.getElementById("ra65").innerHTML=
+    "<strong>Age 65 Projection</strong><br>"+
+    "Initial at 55: SGD "+initRA55.toFixed(2)+"<br>"+
+    "Total Top‑ups: SGD "+totalTopups65.toFixed(2)+"<br>"+
+    "Total Interest: SGD "+totalInterest65.toFixed(2)+"<br>"+
+    "<strong>Total: SGD "+final65.toFixed(2)+"</strong>";
+  document.getElementById("ra70").innerHTML=
+    "<strong>Age 70 Projection</strong><br>"+
+    "Initial at 55: SGD "+initRA55.toFixed(2)+"<br>"+
+    "Total Top‑ups: SGD "+totalTopups70.toFixed(2)+"<br>"+
+    "Total Interest: SGD "+totalInterest70.toFixed(2)+"<br>"+
+    "<strong>Total: SGD "+final70.toFixed(2)+"</strong>";
+}
+
+function generateRATable() {
+  let initRA55 = parseFloat(document.getElementById("initRA55").value);
+  let topupPerc = parseFloat(document.getElementById("topupPercent").value) / 100;
+  let rate = parseFloat(document.getElementById("post55Return").value) / 100;
+  let ers55 = parseFloat(document.getElementById("ersAt55").dataset.value);
+  let ersGrowth = parseFloat(document.getElementById("ersGrowthRate").value) / 100;
+
+  let balance = initRA55;
+  let tableHTML = "<table style='width:100%; border-collapse:collapse; font-size:14px;'>"+
+    "<tr style='background:#e8edf5;'><th style='border:1px solid #ddd; padding:8px;'>Age</th>"+
+    "<th style='border:1px solid #ddd; padding:8px;'>Start Balance</th>"+
+    "<th style='border:1px solid #ddd; padding:8px;'>ERS Cap</th>"+
+    "<th style='border:1px solid #ddd; padding:8px;'>Top‑Up</th>"+
+    "<th style='border:1px solid #ddd; padding:8px;'>Interest</th>"+
+    "<th style='border:1px solid #ddd; padding:8px;'>End Balance</th></tr>";
+
+  for (let year=0; year<=15; year++){
+    let age=55+year;
+    let ersThisYear=ers55*Math.pow(1+ersGrowth,year);
+    let topup=ersThisYear*topupPerc;
+    let interest=(balance+topup)*rate;
+    let endBalance=balance+topup+interest;
+
+    tableHTML += "<tr>"+
+      `<td style='border:1px solid #ddd; padding:8px;'>${age}</td>`+
+      `<td style='border:1px solid #ddd; padding:8px;'>SGD ${balance.toFixed(2)}</td>`+
+      `<td style='border:1px solid #ddd; padding:8px;'>SGD ${ersThisYear.toFixed(2)}</td>`+
+      `<td style='border:1px solid #ddd; padding:8px;'>SGD ${topup.toFixed(2)}</td>`+
+      `<td style='border:1px solid #ddd; padding:8px;'>SGD ${interest.toFixed(2)}</td>`+
+      `<td style='border:1px solid #ddd; padding:8px;'>SGD ${endBalance.toFixed(2)}</td>`+
+      "</tr>";
+    balance=endBalance;
+  }
+  tableHTML+="</table>";
+  document.getElementById("raGrowthTable").style.display="block";
+  document.getElementById("raGrowthTable").innerHTML=tableHTML;
 }
 </script>
 
